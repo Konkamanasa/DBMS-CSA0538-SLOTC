@@ -1,77 +1,54 @@
-mysql> DELIMITER $$
-mysql> CREATE FUNCTION REPEAT_DEMO(INC INT)
-    -> RETURNS CHAR(40)
-    -> DETERMINISTIC
-    -> BEGIN
-    -> DECLARE INCOME INT;
-    -> SET INCOME=0;
-    -> REPEAT
-    -> SET INCOME=INCOME+INC;
-    -> UNTIL INCOME>4000
-    -> END REPEAT;
-    -> RETURN "INCOME>4000 DETECTED";
-    -> END;
-    -> $$
-Query OK, 0 rows affected (0.01 sec)
-
-mysql> SELECT REPEAT_DEMO(3000);$$
-+----------------------+
-| REPEAT_DEMO(3000)    |
-+----------------------+
-| INCOME>4000 DETECTED |
-+----------------------+
-1 row in set (0.00 sec)
-
-mysql> SELECT REPEAT_DEMO(4000);$$
-+----------------------+
-| REPEAT_DEMO(4000)    |
-+----------------------+
-| INCOME>4000 DETECTED |
-+----------------------+
-1 row in set (0.00 sec)
-mysql> DELIMITER //
-mysql> CREATE PROCEDURE while_loop()
-    -> BEGIN
-    -> DECLARE num INT default 1;
-    -> DECLARE res Varchar(50) default '';
-    -> WHILE num < 78125 DO
-    -> SET res = CONCAT(res,num,',');
-    -> SET num = num*5;
-    ->  END While;
-    -> SELECT res;
-    ->  END //
-Query OK, 0 rows affected (0.02 sec)
-mysql> call while_loop();
-+----------------------------+
-| res                        |
-+----------------------------+
-| 1,5,25,125,625,3125,15625, |
-+----------------------------+
-1 row in set (0.01 sec)
-
-mysql> DELIMITER $$
-mysql> CREATE FUNCTION WHILE_DEMO(VALUE CHAR(1))
-    -> RETURNS CHAR(20)
-    -> DETERMINISTIC
-    -> BEGIN
-    -> DECLARE STR CHAR(100);
-    -> DECLARE I INT;
-    -> SET STR='';
-    -> SET I=1;
-    -> LABEL:
-    -> WHILE I<=5 DO
-    -> SET STR =CONCAT(STR,VALUE);
-    -> SET I=I+1;
-    -> END WHILE LABEL;
-    -> RETURN STR;
-    -> END;
-    -> $$
+mysql> delimiter //
+mysql> create function incomelevel(monthly_value int)
+    -> returns varchar(20)
+    -> deterministic
+    -> begin
+    -> declare income_level varchar(20);
+    -> case monthly_value
+    -> when 4000 then
+    -> set income_level='low income';
+    -> when 5000 then
+    -> set income_level='avg income';
+    -> else
+    -> set income_level='high income';
+    -> end case;
+    -> return income_level;
+    -> end
+    -> //
 Query OK, 0 rows affected (0.02 sec)
 
-mysql> SELECT WHILE_DEMO('A');$$
+mysql> select incomelevel(5400);
+    -> //
++-------------------+
+| incomelevel(5400) |
++-------------------+
+| high income       |
++-------------------+
+1 row in set (0.00 sec)
+mysql> delimiter //
+mysql> create function calcincome(start_value int)
+    -> returns int
+    -> deterministic
+    -> begin
+    -> declare income int;
+    -> set income=0;
+    -> label1:loop
+    -> set income=income+start_value;
+    -> if income<4000 then
+    -> iterate label1;
+    -> end if;
+    -> leave label1;
+    -> end loop label1;
+    -> return income;
+    -> end;
+    -> //
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select calcincome(450);
+    -> //
 +-----------------+
-| WHILE_DEMO('A') |
+| calcincome(450) |
 +-----------------+
-| AAAAA           |
+|            4050 |
 +-----------------+
-1 row in set (0.01 sec)
+1 row in set (0.00 sec)
